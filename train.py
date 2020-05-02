@@ -18,9 +18,11 @@ from numpy.random import seed
 seed(512)
 
 
-DATA_LEN = 100
+DATA_LEN = 12000
 
 spec, phase, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN)
+#spec, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN, include_phase=False)
+#spec.shape = (spec.shape[0], spec.shape[1], spec.shape[2], 1)
 
 spec -= np.mean(spec)
 spec /= np.std(spec)
@@ -38,27 +40,28 @@ model.add(Conv2D(16, kernel_size=(3,5), strides=(1,2), activation='relu', input_
 model.add(Conv2D(32, kernel_size=(3,5), strides=(1,2), activation='relu'))
 model.add(Conv2D(64, kernel_size=(3,3), strides=(1,2), activation='relu'))
 model.add(Conv2D(128, kernel_size=(3,3), strides=(1,2), activation='relu'))
-model.add(Conv2D(128, kernel_size=(3,3), strides=(1,2), activation='relu'))
+model.add(Conv2D(8, kernel_size=(3,3), strides=(1,2), activation='relu'))
 
 
+model.add(Flatten())
+"""
 shape = model.output_shape
 model.add(Reshape((shape[1], shape[2]*shape[3])))
 
-
 model.add(Bidirectional(LSTM(512)))
+"""
 
-
-model.add(Dense(512, activation='relu'))
+model.add(Dense(1024, activation='relu'))
 model.add(Dropout(0.5))
-model.add(Dense(512, activation='relu'))
+model.add(Dense(1024, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense( MASK_SHAPE, activation='sigmoid'))
 
-model.compile(loss='mse', optimizer='adam', metrics=['mse'])
+model.compile(loss='mse', optimizer='adam', metrics=[])
 
 
 model.fit(spec[:int(DATA_LEN*0.9)], mask[:int(DATA_LEN*0.9)],
-                batch_size=4, epochs=5, shuffle=True,
+                batch_size=16, epochs=10,
                 validation_data=(spec[int(DATA_LEN*0.9):], mask[int(DATA_LEN*0.9):]))
 
 #model.save("m2.h5")
