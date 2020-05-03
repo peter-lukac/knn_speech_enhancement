@@ -16,9 +16,14 @@ CLEAN_FOLDER = "test/clean"
 NOISE_FOLDER = "test/noise"
 
 
-def yield_noise(noise_folder):
+def yield_noise(noise_folder, depth_search=False):
     noise_folders = os.walk(noise_folder)
     noise_folders = list(filter(lambda x: not x[2] == [], noise_folders))
+    if depth_search:
+        while True:
+            for (folder, fos, files) in noise_folders:
+                for f in files:
+                    yield folder + "/" + f
     file_counter = {}
     for f in noise_folders:
         file_counter[f[0]] = 0
@@ -31,12 +36,13 @@ def yield_noise(noise_folder):
 
 
 
-def get_data(clean_folder, noise_folder, start=0, count=np.inf, mask_size=None, include_phase=True, flatten=True):
+def get_data(clean_folder, noise_folder, start=0, count=np.inf,
+                mask_size=None, include_phase=True, flatten=True, depth_search=False):
     idx = 0
     noise_array = []
     phase_array = []
     mask_array = []
-    for f_clean, f_noise in zip(os.listdir(clean_folder), yield_noise(noise_folder)):
+    for f_clean, f_noise in zip(os.listdir(clean_folder), yield_noise(noise_folder, depth_search)):
         if idx < start:
             idx += 1
             continue
