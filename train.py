@@ -14,28 +14,29 @@ from prepare_data import get_data
 import numpy as np
 import matplotlib.pyplot as plt
 import json
+import sys
 
 from numpy.random import seed
 seed(512)
 
 
 DATA_LEN = 12000
-SAVE_AS = "models/decov_12000_elu_hard_sigmoid_10"
+
+SAVE_AS = None
+if len(sys.argv) == 2:
+    SAVE_AS = sys.argv[1]
 
 
-spec, phase, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN)
-#spec, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN, include_phase=False)
-#spec.shape = (spec.shape[0], spec.shape[1], spec.shape[2], 1)
+#spec, phase, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN)
+spec, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN, include_phase=False)
+spec.shape = (spec.shape[0], spec.shape[1], spec.shape[2], 1)
 
 mean = np.mean(spec)
 std = np.std(spec)
 spec -= mean
 spec /= std
 
-with open(SAVE_AS + "_n.json", 'w') as f:
-    json.dump({'mean': float(mean), 'std':float(std)}, f)
-
-spec = np.array([spec.T, phase.T]).T
+#spec = np.array([spec.T, phase.T]).T
 
 SPEC_SHAPE = spec.shape[1:]
 MASK_SHAPE = mask.shape[1]
@@ -52,12 +53,7 @@ model.add(Conv2D(8, kernel_size=(3,3), strides=(1,2), activation='relu'))
 
 
 model.add(Flatten())
-"""
-shape = model.output_shape
-model.add(Reshape((shape[1], shape[2]*shape[3])))
-
-model.add(Bidirectional(LSTM(512)))
-"""
+# removed LSTM due to extremly long training time and bad results
 
 model.add(Dense(1024, activation='relu'))
 model.add(Dropout(0.5))
@@ -73,9 +69,12 @@ model.fit(spec[:int(DATA_LEN*0.9)], mask[:int(DATA_LEN*0.9)],
                 validation_data=(spec[int(DATA_LEN*0.9):], mask[int(DATA_LEN*0.9):]))
 
 
-"""
-with open(SAVE_AS + ".json", "w") as outfile:
-    json.dump(h.history, outfile)
 
-model.save(SAVE_AS + ".h5")
-"""
+if SAVE_AS:
+    with open(SAVE_AS + ".json", "w") as outfile:
+        json.dump(h.history, outfile)
+
+    model.save(SAVE_AS + ".h5")
+
+    with open(SAVE_AS + "_n.json", 'w') as f:
+        json.dump({'mean': float(mean), 'std':float(std)}, f)

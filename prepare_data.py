@@ -12,9 +12,6 @@ SPEC_MIN = 1e-13
 SPEC_MIN_LOG = 13
 
 
-CLEAN_FOLDER = "test/clean"
-NOISE_FOLDER = "test/noise"
-
 
 def yield_noise(noise_folder, depth_search=False):
     noise_folders = os.walk(noise_folder)

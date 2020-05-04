@@ -25,6 +25,10 @@ def prepare_samples(src_folder, tgt_folder,
                     skip_folders=[], level=1.0):
     if not tgt_folder[-1] == "/":
         tgt_folder = tgt_folder + "/"
+    try:
+        os.makedirs(tgt_folder)
+    except FileExistsError:
+        pass
     for (dirpath, dirnames, filenames) in os.walk(src_folder):
         if not ok_path(dirpath, skip_folders):
             continue
@@ -69,3 +73,20 @@ prepare_samples("qutnoisestreet", "samples/noise/street", min_length=3, keep_fir
 prepare_samples("BabbleNoise", "samples/noise/babble", min_length=3, keep_first=False)
 prepare_samples("DrivingcarNoise", "samples/noise/driving", min_length=3, keep_first=False)
 prepare_samples("MachineryNoise", "samples/noise/machines", min_length=3, keep_first=False)
+
+
+
+prepare_samples("LibriSpeech/dev-clean", "samples_short/clean", length=0.32, min_length=0.32)
+prepare_samples("LibriSpeech/dev-other", "samples_short/clean", length=0.32, min_length=0.32)
+
+prepare_samples("Nonspeech", "samples_short/noise/random", level=0.2, length=0.32, min_length=0.32)
+
+prepare_samples("qutnoisecafe", "samples_short/noise/cafe", length=0.32, min_length=0.32)
+prepare_samples("qutnoisecar", "samples_short/noise/car", length=0.32, min_length=0.32)
+prepare_samples("qutnoisehome", "samples_short/noise/home", length=0.32, min_length=0.32)
+prepare_samples("qutnoisereverb", "samples_short/noise/reverb", length=0.32, min_length=0.32)
+prepare_samples("qutnoisestreet", "samples_short/noise/street", length=0.32, min_length=0.32)
+
+prepare_samples("BabbleNoise", "samples_short/noise/babble", length=0.32, min_length=0.32)
+prepare_samples("DrivingcarNoise", "samples_short/noise/driving", length=0.32, min_length=0.32)
+prepare_samples("MachineryNoise", "samples_short/noise/machines", length=0.32, min_length=0.32)

@@ -14,13 +14,17 @@ from prepare_data import get_data
 import numpy as np
 import matplotlib.pyplot as plt
 import json
+import sys
 
 from numpy.random import seed
 seed(512)
 
 
 DATA_LEN = 2000
-SAVE_AS = "models/short_2000_elu_hard_sigmoid_81"
+
+SAVE_AS = None
+if len(sys.argv) == 2:
+    SAVE_AS = sys.argv[1]
 
 #spec, phase, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN)
 spec, mask = get_data("samples_short/clean", "samples_short/noise",
@@ -34,10 +38,6 @@ std = np.std(spec)
 spec -= mean
 spec /= std
 
-with open(SAVE_AS + "_n.json", 'w') as f:
-    json.dump({'mean': float(mean), 'std':float(std)}, f)
-
-#spec = np.array([spec.T, phase.T]).T
 
 SPEC_SHAPE = spec.shape[1:]
 MASK_SHAPE = mask.shape[1]
@@ -55,6 +55,7 @@ model.add(Conv2D(32, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2D(64, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2D(128, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 
+# LSTM was supposed to be here, LSTM added too much data for gpu vram
 
 model.add(Conv2DTranspose(128, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2DTranspose(64, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
@@ -66,16 +67,17 @@ model.add(Conv2DTranspose(1, kernel_size=(3,5), strides=(1,2), activation='hard_
 
 model.compile(loss='mse', optimizer='adam', metrics=[])
 
-"""
+
 h = model.fit(spec[:int(DATA_LEN*0.9)], mask[:int(DATA_LEN*0.9)],
                 batch_size=128, epochs=30, shuffle=True,
                 validation_data=(spec[int(DATA_LEN*0.9):], mask[int(DATA_LEN*0.9):]))
-"""
 
 
-"""
-with open(SAVE_AS + ".json", "w") as outfile:
-    json.dump(h.history, outfile)
+if SAVE_AS:
+    with open(SAVE_AS + ".json", "w") as outfile:
+        json.dump(h.history, outfile)
 
-model.save(SAVE_AS + ".h5")
-"""
+    model.save(SAVE_AS + ".h5")
+
+    with open(SAVE_AS + "_n.json", 'w') as f:
+        json.dump({'mean': float(mean), 'std':float(std)}, f)

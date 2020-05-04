@@ -14,6 +14,7 @@ from prepare_data import get_data
 import numpy as np
 import matplotlib.pyplot as plt
 import json
+import sys
 
 from numpy.random import seed
 seed(512)
@@ -21,16 +22,20 @@ seed(512)
 
 DATA_LEN = 12000
 
-#spec, phase, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN)
+SAVE_AS = None
+if len(sys.argv) == 2:
+    SAVE_AS = sys.argv[1]
+
 spec, mask = get_data("samples/clean", "samples/noise", count=DATA_LEN, include_phase=False, flatten=False)
 
 spec.shape = (spec.shape[0], spec.shape[1], spec.shape[2], 1)
 mask.shape = (mask.shape[0], mask.shape[1], mask.shape[2], 1)
 
-spec -= np.mean(spec)
-spec /= np.std(spec)
+mean = np.mean(spec)
+std = np.std(spec)
+spec -= mean
+spec /= std
 
-#spec = np.array([spec.T, phase.T]).T
 
 SPEC_SHAPE = spec.shape[1:]
 MASK_SHAPE = mask.shape[1]
@@ -47,7 +52,7 @@ model.add(Conv2D(32, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2D(64, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2D(128, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 
-print(model.output_shape)
+# LSTM was supposed to be here, LSTM added too much data for gpu vram
 
 model.add(Conv2DTranspose(128, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2DTranspose(64, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
@@ -55,20 +60,21 @@ model.add(Conv2DTranspose(32, kernel_size=(3,3), strides=(1,2), activation=ACTIV
 model.add(Conv2DTranspose(16, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2DTranspose(1, kernel_size=(3,5), strides=(1,2), activation='hard_sigmoid'))
 
-print(model.output_shape)
 
 
 model.compile(loss='mse', optimizer='adam', metrics=[])
 
 
 h = model.fit(spec[:int(DATA_LEN*0.9)], mask[:int(DATA_LEN*0.9)],
-                batch_size=64, epochs=30, shuffle=True,
+                batch_size=64, epochs=14, shuffle=True,
                 validation_data=(spec[int(DATA_LEN*0.9):], mask[int(DATA_LEN*0.9):]))
 
 
-SAVE_AS = "decov_12000_elu_hard_sigmoid_30"
+if SAVE_AS:
+    with open(SAVE_AS + ".json", "w") as outfile:
+        json.dump(h.history, outfile)
 
-with open("models/" + SAVE_AS + ".json", "w") as outfile:
-    json.dump(h.history, outfile)
+    model.save(SAVE_AS + ".h5")
 
-model.save("models/" + SAVE_AS + ".h5")
+    with open(SAVE_AS + "_n.json", 'w') as f:
+        json.dump({'mean': float(mean), 'std':float(std)}, f)

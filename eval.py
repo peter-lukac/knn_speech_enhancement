@@ -14,22 +14,24 @@ from keras.models import load_model
 SPEC_MIN = 1e-13
 SPEC_MIN_LOG = 13
 
-model_name = "models/short_2000_elu_hard_sigmoid_81.h5"
+
+if len(sys.argv) != 5:
+    print("Usage: eval.py MODEL.h5 CLEAN_FOLDER NOISE_FOLDER SYNTH_TARGET_FOLDER")
+    sys.exit(1)
+
+model_name = sys.argv[1]
 
 model = load_model(model_name)
 
-with open(model_name.split('.')[0] + "_n.json", 'r') as f:
+with open(model_name.split('.h5')[0] + "_n.json", 'r') as f:
     norm = json.load(f)
 mean = norm["mean"]
 std = norm["std"]
 
-if len(sys.argv) != 4:
-    print("Usage: ...")
-    sys.exit(1)
 
-clean_folder = sys.argv[1]
-noise_folder = sys.argv[2]
-synth_folder = sys.argv[3]
+clean_folder = sys.argv[2]
+noise_folder = sys.argv[3]
+synth_folder = sys.argv[4]
 
 if clean_folder[-1] != "/":
     clean_folder += "/"
@@ -56,7 +58,7 @@ for clean in clean_files:
             x2 = z
         name = synth_folder + clean + "_" + noise
         try:
-            os.mkdir(name)
+            os.makedirs(name)
         except FileExistsError:
             pass
         x = x1 + x2
