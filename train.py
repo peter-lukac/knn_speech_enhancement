@@ -13,19 +13,27 @@ from keras.layers.convolutional import Conv2D, MaxPooling2D
 from prepare_data import get_data
 import numpy as np
 import matplotlib.pyplot as plt
+import json
 
 from numpy.random import seed
 seed(512)
 
 
 DATA_LEN = 12000
+SAVE_AS = "models/decov_12000_elu_hard_sigmoid_10"
+
 
 spec, phase, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN)
 #spec, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN, include_phase=False)
 #spec.shape = (spec.shape[0], spec.shape[1], spec.shape[2], 1)
 
-spec -= np.mean(spec)
-spec /= np.std(spec)
+mean = np.mean(spec)
+std = np.std(spec)
+spec -= mean
+spec /= std
+
+with open(SAVE_AS + "_n.json", 'w') as f:
+    json.dump({'mean': float(mean), 'std':float(std)}, f)
 
 spec = np.array([spec.T, phase.T]).T
 
@@ -64,4 +72,10 @@ model.fit(spec[:int(DATA_LEN*0.9)], mask[:int(DATA_LEN*0.9)],
                 batch_size=16, epochs=10,
                 validation_data=(spec[int(DATA_LEN*0.9):], mask[int(DATA_LEN*0.9):]))
 
-#model.save("m2.h5")
+
+"""
+with open(SAVE_AS + ".json", "w") as outfile:
+    json.dump(h.history, outfile)
+
+model.save(SAVE_AS + ".h5")
+"""
