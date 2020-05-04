@@ -41,3 +41,15 @@ https://data.researchdatafinder.qut.edu.au/dataset/a0eed5af-abd8-441b-b14a-8e064
 
 5. Get PESQ values:
     E.g. python get_pesq.py synth
+
+
+REQUIRED MODULES
+
+librosa
+numpy
+keras
+matplotlib
+soundfile
+opencv-python
+plaidml-keras
+plaidbench

@@ -20,7 +20,7 @@ from numpy.random import seed
 seed(512)
 
 
-DATA_LEN = 12000
+DATA_LEN = 300
 
 SAVE_AS = None
 if len(sys.argv) == 2:
@@ -53,6 +53,7 @@ model.add(Conv2D(64, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2D(128, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 
 # LSTM was supposed to be here, LSTM added too much data for gpu vram
+print(model.output_shape)
 
 model.add(Conv2DTranspose(128, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2DTranspose(64, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
