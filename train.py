@@ -9,7 +9,7 @@ os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 from keras.models import Sequential
 from keras.layers import LSTM, Bidirectional, Embedding, Reshape
 from keras.layers.core import Flatten, Dense, Dropout, Flatten
-from keras.layers.convolutional import Conv2D, MaxPooling2D
+from keras.layers.convolutional import Conv2D, MaxPooling2D, Conv2DTranspose
 from prepare_data import get_data
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,7 +21,7 @@ seed(512)
 
 
 SAVE_AS = None
-if len(sys.argv) == 3 or len(sys.argv) == 4:
+if len(sys.argv) == 4:
     folder_clean = sys.argv[1]
     folder_noise = sys.argv[2]
     SAVE_AS = sys.argv[3]
@@ -70,7 +70,7 @@ model.compile(loss='mse', optimizer='adam', metrics=[])
 
 
 model.fit(spec[:int(DATA_LEN*0.9)], mask[:int(DATA_LEN*0.9)],
-                batch_size=64, epochs=10,
+                batch_size=64, epochs=1,
                 validation_data=(spec[int(DATA_LEN*0.9):], mask[int(DATA_LEN*0.9):]))
 
 
