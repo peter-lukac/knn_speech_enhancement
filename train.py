@@ -3,7 +3,7 @@
 
 import os
 
-# i use this to use amd gpu, comment this line to use defaul tensorflow or something
+# I use this to use amd gpu, comment this line to use defaul tensorflow or something
 os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 
 from keras.models import Sequential
@@ -20,61 +20,65 @@ from numpy.random import seed
 seed(512)
 
 
-DATA_LEN = 12000
-
 SAVE_AS = None
-if len(sys.argv) == 2:
-    SAVE_AS = sys.argv[1]
+if len(sys.argv) == 3 or len(sys.argv) == 4:
+    folder_clean = sys.argv[1]
+    folder_noise = sys.argv[2]
+    SAVE_AS = sys.argv[3]
+elif len(sys.argv) == 1:
+    print("Using default clean folder(\"data_clean\") and default noise folder(\"data_noise\")")
+    folder_clean = "data_clean"
+    folder_clean = "data_noise"
+else:
+    print("Usage: ...")
+    sys.exit(1)
 
 
-#spec, phase, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN)
-spec, mask = get_data("samples/clean", "samples/noise", mask_size=(128, 109), count=DATA_LEN, include_phase=False)
-spec.shape = (spec.shape[0], spec.shape[1], spec.shape[2], 1)
+spec, mask = get_data(folder_clean,folder_clean, 11, 8*3600, depth_search=True)
+
+DATA_LEN = len(spec)
 
 mean = np.mean(spec)
 std = np.std(spec)
 spec -= mean
 spec /= std
 
-#spec = np.array([spec.T, phase.T]).T
-
 SPEC_SHAPE = spec.shape[1:]
-MASK_SHAPE = mask.shape[1]
 
-PADDING = "same"
+ACTIVATION = 'elu'
+
 model = Sequential()
 
-# 1
-model.add(Conv2D(16, kernel_size=(3,5), strides=(1,2), activation='relu', input_shape=SPEC_SHAPE))
-model.add(Conv2D(32, kernel_size=(3,5), strides=(1,2), activation='relu'))
-model.add(Conv2D(64, kernel_size=(3,3), strides=(1,2), activation='relu'))
-model.add(Conv2D(128, kernel_size=(3,3), strides=(1,2), activation='relu'))
-model.add(Conv2D(8, kernel_size=(3,3), strides=(1,2), activation='relu'))
+model.add(Conv2D(16, kernel_size=(1,5), strides=(1,3), activation=ACTIVATION, input_shape=SPEC_SHAPE))
+model.add(Conv2D(32, kernel_size=(1,5), strides=(1,2), activation=ACTIVATION))
+model.add(Conv2D(64, kernel_size=(1,3), strides=(1,2), activation=ACTIVATION))
+model.add(Conv2D(128, kernel_size=(1,3), strides=(1,2), activation=ACTIVATION))
 
+shape = model.output_shape
 
-model.add(Flatten())
-# removed LSTM due to extremly long training time and bad results
+model.add(Reshape((shape[1], shape[2]*shape[3])))
+model.add(LSTM(shape[2]*shape[3], return_sequences=True))
+model.add(LSTM(shape[2]*shape[3], return_sequences=True))
+model.add(Reshape((shape[1], shape[2], shape[3])))
 
-model.add(Dense(1024, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(1024, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense( MASK_SHAPE, activation='sigmoid'))
+model.add(Conv2DTranspose(128, kernel_size=(1,3), strides=(1,2), activation=ACTIVATION))
+model.add(Conv2DTranspose(64, kernel_size=(1,5), strides=(1,2), activation=ACTIVATION))
+model.add(Conv2DTranspose(32, kernel_size=(1,5), strides=(1,2), activation=ACTIVATION))
+model.add(Conv2DTranspose(1, kernel_size=(1,5), strides=(1,3), activation='hard_sigmoid'))
 
 model.compile(loss='mse', optimizer='adam', metrics=[])
 
 
 model.fit(spec[:int(DATA_LEN*0.9)], mask[:int(DATA_LEN*0.9)],
-                batch_size=16, epochs=10,
+                batch_size=64, epochs=10,
                 validation_data=(spec[int(DATA_LEN*0.9):], mask[int(DATA_LEN*0.9):]))
 
 
-
 if SAVE_AS:
+    if ".h5" in SAVE_AS:
+        SAVE_AS = SAVE_AS.split(".h5")[0]
     with open(SAVE_AS + ".json", "w") as outfile:
         json.dump(h.history, outfile)
-
     model.save(SAVE_AS + ".h5")
-
     with open(SAVE_AS + "_n.json", 'w') as f:
         json.dump({'mean': float(mean), 'std':float(std)}, f)
