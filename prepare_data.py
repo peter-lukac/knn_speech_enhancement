@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import random
-import cv2
+from skimage.transform import resize
 
 
 SPEC_MIN = 1e-13
@@ -67,7 +67,7 @@ def get_data_old(clean_folder, noise_folder, start=0, count=np.inf,
             phase_array.append(phase.T)
 
         if mask_size:
-            mask = cv2.resize(mask, dsize=(mask_size[1], mask_size[0]))
+            mask = resize(mask, (mask_size[1], mask_size[0]))
 
         if flatten:
             mask_array.append(mask.T.flatten())
@@ -132,17 +132,17 @@ def get_data(clean_folder, noise_folder, size, duration=3600, fs=16000,
                 depth_search=False, dense=False):
     x_clean = get_data_of_duration(clean_folder, True, duration, fs)
     x_noise = get_data_of_duration(noise_folder, depth_search, duration, fs)
-    
+
     if len(x_clean) <= len(x_noise):
         x_noise = x_clean + x_noise[:len(x_clean)]
     else:
         x_noise = x_clean[:len(x_noise)] + x_noise
         x_clean = x_clean[:len(x_noise)]
-    
+
 
     spec_clean = np.abs(librosa.stft(x_clean, n_fft=512, hop_length=250, win_length=512))**2
     spec_noise = np.abs(librosa.stft(x_noise, n_fft=512, hop_length=250, win_length=512))**2
-    
+
     spec_clean = np.maximum(spec_clean, SPEC_MIN)
     spec_noise = np.maximum(spec_noise, SPEC_MIN)
     spec_clean = np.log10(spec_clean) + SPEC_MIN_LOG
@@ -162,4 +162,3 @@ def get_data(clean_folder, noise_folder, size, duration=3600, fs=16000,
     mask = mask.reshape((length, size, 257, 1))
 
     return spec_noise, mask
-            

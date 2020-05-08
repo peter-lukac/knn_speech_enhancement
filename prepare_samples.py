@@ -3,26 +3,15 @@ import soundfile as sf
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-
-
-def ok_path(path, skip_folders=[]):
-    for folder in skip_folders:
-        if folder in path:
-            return False
-    return True
+import os.path
 
 
 def is_sound(filename):
-    for i in ['.wav', '.flac']:
-        if i in filename:
-            return True
-    return False
+    return '.wav' in filename or '.flac' in filename
 
 
-def prepare_samples(src_folder, tgt_folder,
-                    length=3, min_length=1,
-                    keep_first=True, tgt_sample_freq=16000,
-                    skip_folders=[], level=1.0):
+def prepare_samples(src_folder, tgt_folder, length=3, min_length=1,
+                    keep_first=True, tgt_sample_freq=16000, level=1.0):
     if not tgt_folder[-1] == "/":
         tgt_folder = tgt_folder + "/"
     try:
@@ -30,12 +19,10 @@ def prepare_samples(src_folder, tgt_folder,
     except FileExistsError:
         pass
     for (dirpath, dirnames, filenames) in os.walk(src_folder):
-        if not ok_path(dirpath, skip_folders):
-            continue
-        filenames = filter(lambda x: is_sound(x), filenames)
+        filenames = filter(is_sound, filenames)
         for f in filenames:
             file_counter = 0
-            x, fs = sf.read(dirpath + "\\" + f)
+            x, fs = sf.read(os.path.join(dirpath, f))
             if len(x.shape) == 2:
                 x = np.mean(x, axis=1)
             if len(x) < 8000:
@@ -55,10 +42,10 @@ def prepare_samples(src_folder, tgt_folder,
                 else:
                     x2 = x[i1:i2]
                 #librosa.output.write_wav(tgt_folder + f + "_" + str(file_counter) + ".wav", x2, tgt_sample_freq)
-                sf.write(tgt_folder + f + "_" + str(file_counter) + ".flac", x2, tgt_sample_freq)
+                sf.write(os.path.join(tgt_folder, f + "_" + str(file_counter) + ".flac"), x2, tgt_sample_freq)
                 file_counter += 1
 
-           
+
 prepare_samples("LibriSpeech/dev-clean", "samples/clean")
 prepare_samples("LibriSpeech/dev-other", "samples/clean")
 
