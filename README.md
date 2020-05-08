@@ -9,7 +9,7 @@ the rest inside the `miniconda3` container.
 ```bash
 docker run -t -i continuumio/miniconda3 /bin/bash
 apt-get install unzip
-conda install -y -c conda-forge tensorflow keras numpy scikit-image matplotlib libsndfile alsa-lib
+conda install -y -c conda-forge tensorflow keras numpy scikit-image matplotlib libsndfile alsa-lib libsndfile
 conda install -y -c auto gl
 conda install -y portaudio
 pip install plaidml-keras plaidbench librosa soundfile sounddevice
