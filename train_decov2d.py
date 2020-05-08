@@ -41,10 +41,10 @@ SPEC_SHAPE = spec.shape[1:]
 MASK_SHAPE = mask.shape[1]
 
 PADDING = "same"
-model = Sequential()
-
 ACTIVATION = 'elu'
 
+
+model = Sequential()
 # 1
 model.add(Conv2D(8, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION, input_shape=SPEC_SHAPE))
 model.add(Conv2D(16, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
@@ -53,7 +53,11 @@ model.add(Conv2D(64, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2D(128, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 
 # LSTM was supposed to be here, LSTM added too much data for gpu vram
-print(model.output_shape)
+shape = model.output_shape
+model.add(Reshape((shape[1], shape[2]*shape[3])))
+model.add(LSTM(shape[2]*shape[3], return_sequences=True))
+model.add(LSTM(shape[2]*shape[3], return_sequences=True))
+model.add(Reshape((shape[1], shape[2], shape[3])))
 
 model.add(Conv2DTranspose(128, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
 model.add(Conv2DTranspose(64, kernel_size=(3,3), strides=(1,2), activation=ACTIVATION))
