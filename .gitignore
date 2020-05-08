@@ -14,10 +14,10 @@ samples
 test
 eval_short
 samples_short
-models
 synth
 test*
 data_clean
 data_noise
 load_test.py
 train_*
+models

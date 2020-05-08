@@ -24,7 +24,7 @@ https://data.researchdatafinder.qut.edu.au/dataset/a0eed5af-abd8-441b-b14a-8e064
 https://data.researchdatafinder.qut.edu.au/dataset/a0eed5af-abd8-441b-b14a-8e064bc3d732/resource/10eeceae-9f0c-4556-b33a-dcf35c4f4db9/download/qutnoisestreet.zip
 
 3. Train:
-    model with 2d convolutions and FC layers: python train.py CLEAN_FOLDER NOISE_FOLDER MODEL.h5
+    model with 2d convolutions, LSTM and decov2d: python train.py CLEAN_FOLDER NOISE_FOLDER MODEL.h5 EPOCH
 
 4. Create eval data and  synthesize results:
     python eval.py MODEL.h5 CLEAN_FOLDER NOISE_FOLDER SYNTH_FOLDER

@@ -130,7 +130,7 @@ def get_data_of_duration(folder, depth_search, duration, target_fs=16000):
 
 def get_data(clean_folder, noise_folder, size, duration=3600, fs=16000,
                 depth_search=False, dense=False):
-    x_clean = get_data_of_duration(clean_folder, depth_search, duration, fs)
+    x_clean = get_data_of_duration(clean_folder, True, duration, fs)
     x_noise = get_data_of_duration(noise_folder, depth_search, duration, fs)
     
     if len(x_clean) <= len(x_noise):

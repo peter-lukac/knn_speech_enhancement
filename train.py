@@ -21,20 +21,22 @@ seed(512)
 
 
 SAVE_AS = None
-if len(sys.argv) == 4:
+if len(sys.argv) == 5:
     folder_clean = sys.argv[1]
     folder_noise = sys.argv[2]
     SAVE_AS = sys.argv[3]
+    epochs = int(sys.argv[4])
 elif len(sys.argv) == 1:
     print("Using default clean folder(\"data_clean\") and default noise folder(\"data_noise\")")
     folder_clean = "data_clean"
     folder_clean = "data_noise"
+    epochs = 1
 else:
     print("Usage: ...")
     sys.exit(1)
 
 
-spec, mask = get_data(folder_clean,folder_clean, 11, 8*3600, depth_search=True)
+spec, mask = get_data(folder_clean,folder_clean, 27, 8*3600, depth_search=False)
 
 DATA_LEN = len(spec)
 
@@ -69,8 +71,8 @@ model.add(Conv2DTranspose(1, kernel_size=(1,5), strides=(1,3), activation='hard_
 model.compile(loss='mse', optimizer='adam', metrics=[])
 
 
-model.fit(spec[:int(DATA_LEN*0.9)], mask[:int(DATA_LEN*0.9)],
-                batch_size=64, epochs=1,
+h = model.fit(spec[:int(DATA_LEN*0.9)], mask[:int(DATA_LEN*0.9)],
+                batch_size=64, epochs=epochs,
                 validation_data=(spec[int(DATA_LEN*0.9):], mask[int(DATA_LEN*0.9):]))
 
 
