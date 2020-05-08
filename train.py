@@ -36,7 +36,7 @@ else:
     sys.exit(1)
 
 
-spec, mask = get_data(folder_clean,folder_clean, 27, 8*3600, depth_search=False)
+spec, mask = get_data(folder_clean,folder_clean, 27, 8*3600, depth_search=True)
 
 DATA_LEN = len(spec)
 
